@@ -1,0 +1,23 @@
+cat << 'EOF' > .gitignore
+# Ignore Data and Models (must be kept on Kaggle or local only)
+data/
+models/
+results/
+*.pt
+*.pth
+*.onnx
+*.npy
+*.parquet
+*.jpg
+*.png
+
+# Ignore Python and Node artifacts
+__pycache__/
+*.py[cod]
+.env
+web/node_modules/
+web/dist/
+
+# Ignore Jupyter checkpoints
+.ipynb_checkpoints/
+EOF
