@@ -1,0 +1,13 @@
+# E4: Early Concatenation + Explicit Cosine Similarity Feature
+exp_id: "E4_concat_similarity"
+model_type: "multimodal"
+text_dim: 512
+image_dim: 512
+hidden_dim: 256
+num_classes: 2
+dropout: 0.3
+lr: 0.001
+weight_decay: 0.01
+epochs: 8
+batch_size: 512
+seeds: [42, 123, 999]

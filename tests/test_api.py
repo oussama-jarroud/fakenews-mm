@@ -40,6 +40,15 @@ def test_health_endpoint(client: TestClient):
     assert "device" in data
 
 
+def test_examples_endpoint(client: TestClient):
+    """Verifies that GET /examples returns 3 curated demo cases (Page 13)."""
+    response = client.get("/examples")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 3
+    assert data[0]["expected_verdict"] == "consistent"
+
+
 def test_predict_text_only(client: TestClient):
     """Verifies /predict inference when only headline text is provided."""
     payload = {

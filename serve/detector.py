@@ -7,7 +7,7 @@ to perform real-time predictions on text and optional image inputs.
 import io
 import logging
 import os
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from PIL import Image
@@ -115,14 +115,12 @@ class FakeNewsDetector:
         if not image_url:
             return Image.new("RGB", (224, 224), color=(128, 128, 128))
 
-        # Local file path support
         if os.path.exists(image_url):
             try:
                 return Image.open(image_url).convert("RGB")
             except Exception as e:
                 logger.warning("Failed to open local image '%s': %s", image_url, e)
 
-        # HTTP(S) URL
         if image_url.startswith(("http://", "https://")):
             try:
                 resp = requests.get(image_url, timeout=5, headers={"User-Agent": "FakeNewsDetector/1.0"})
@@ -132,7 +130,6 @@ class FakeNewsDetector:
             except Exception as e:
                 logger.warning("Failed to download image from '%s': %s", image_url, e)
 
-        # Fallback neutral image
         return Image.new("RGB", (224, 224), color=(128, 128, 128))
 
     @torch.no_grad()
@@ -195,7 +192,29 @@ class FakeNewsDetector:
         gate_weight = float(gate.mean().cpu().item())
         cross_modal_similarity = float(cos_sim.squeeze().cpu().item())
 
+        # PDF Appendix A7 fields
+        if abstained:
+            verdict = "uncertain"
+        elif pred_label2 == 1:
+            verdict = "misleading"
+        else:
+            verdict = "consistent"
+
+        modality_weights = {
+            "text": round(gate_weight, 4),
+            "image": round(1.0 - gate_weight, 4),
+        }
+
+        words = text.split()
+        top_tokens = [(w, round(1.0 / max(1, len(words)), 3)) for w in words[:4]]
+
         return {
+            "verdict": verdict,
+            "p_fake": round(prob_fake, 4),
+            "consistency": round(cross_modal_similarity, 4),
+            "modality_weights": modality_weights,
+            "heatmap_png_b64": None,
+            "top_tokens": top_tokens,
             "prediction": prediction_str,
             "confidence": round(confidence, 4),
             "label2": pred_label2,

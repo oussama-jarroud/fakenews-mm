@@ -14,8 +14,6 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, average_precision_score, brier_score_loss, f1_score, matthews_corrcoef, precision_score, recall_score, roc_auc_score
 import torch
 import torch.nn as nn
@@ -421,32 +419,7 @@ def run_full_pipeline():
     print("TASK A3: RUNNING BASELINES (E-1 to E2)")
     print("=" * 50)
 
-    # E-1: Course Sanity Floor: TF-IDF + Logistic Regression (Text)
-    print("Training E-1: TF-IDF + Logistic Regression (Classical NLP Sanity Floor)...")
-    text_col = "text" if "text" in df.columns else ("clean_title" if "clean_title" in df.columns else "title")
-    train_texts = df.loc[train_mask, text_col].fillna("").astype(str).tolist()
-    val_texts = df.loc[val_mask, text_col].fillna("").astype(str).tolist()
-    test_texts = df.loc[test_mask, text_col].fillna("").astype(str).tolist()
-
-    tfidf = TfidfVectorizer(max_features=10000, stop_words="english", ngram_range=(1, 2))
-    X_tr_tfidf = tfidf.fit_transform(train_texts)
-    X_val_tfidf = tfidf.transform(val_texts)
-    X_te_tfidf = tfidf.transform(test_texts)
-
-    clf_tfidf = LogisticRegression(max_iter=300, C=1.0, random_state=42)
-    clf_tfidf.fit(X_tr_tfidf, labels[train_mask])
-
-    val_preds_tfidf = clf_tfidf.predict(X_val_tfidf)
-    val_probs_tfidf = clf_tfidf.predict_proba(X_val_tfidf)
-    test_preds_tfidf = clf_tfidf.predict(X_te_tfidf)
-    test_probs_tfidf = clf_tfidf.predict_proba(X_te_tfidf)
-
-    val_m_tfidf = compute_metrics(labels[val_mask], val_preds_tfidf, val_probs_tfidf)
-    test_m_tfidf = compute_metrics(labels[test_mask], test_preds_tfidf, test_probs_tfidf)
-    record("E-1_tfidf_logreg", 42, val_m_tfidf, test_m_tfidf)
-    print(f"E-1 TF-IDF + LogReg Sanity Floor: Accuracy={test_m_tfidf['accuracy']:.4f}, Macro-F1={test_m_tfidf['macro_f1']:.4f}")
-
-    # Additional Sanity Floor: Majority Class Chance Baseline
+    # E-1: Sanity Majority Chance Baseline
     majority_class = int(np.bincount(labels[train_mask]).argmax())
     e_minus1_preds = np.full_like(labels[test_mask], majority_class)
     e_minus1_probs = np.zeros((len(test_mask.nonzero()[0]), 2))
