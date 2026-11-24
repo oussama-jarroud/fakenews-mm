@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beyond Shortcuts: Multimodal Fake News Detector</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-950/70 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-shield-halved text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight tracking-tight">Beyond Shortcuts</h1>
+          <p class="text-xs text-slate-400">Consistency-Aware Multimodal Fake News Detector</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <span id="backendStatus" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-950 text-emerald-400 border border-emerald-800">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+          Backend API Live
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-5xl mx-auto px-4 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Left Column: Input Form -->
+    <div class="lg:col-span-6 space-y-6">
+      <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl backdrop-blur">
+        <h2 class="text-base font-semibold text-slate-200 mb-4 flex items-center">
+          <i class="fa-regular fa-newspaper text-indigo-400 mr-2"></i> Inspect News Post
+        </h2>
+
+        <form id="predictForm" class="space-y-4">
+          <!-- Text Headline Input -->
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Headline or Post Text <span class="text-rose-400">*</span></label>
+            <textarea id="textInput" rows="3" required
+              placeholder="e.g. Breaking news: Scientists discover ancient structures on distant planet..."
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"></textarea>
+          </div>
+
+          <!-- Image URL Input -->
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Image URL <span class="text-slate-500">(Optional for Multimodal Check)</span></label>
+            <div class="relative">
+              <input type="url" id="imageUrlInput"
+                placeholder="https://example.com/image.jpg"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+              <i class="fa-regular fa-image absolute left-3.5 top-3.5 text-slate-500 text-xs"></i>
+            </div>
+          </div>
+
+          <!-- Image Preview -->
+          <div id="imagePreviewContainer" class="hidden rounded-xl overflow-hidden border border-slate-700 bg-slate-900/50 max-h-48 flex items-center justify-center">
+            <img id="imagePreview" src="" alt="Preview" class="max-h-48 object-cover w-full">
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="submitBtn"
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Analyze Post with Multimodal Model</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Column: Results Dashboard -->
+    <div class="lg:col-span-6 space-y-6">
+      
+      <!-- Placeholder State -->
+      <div id="emptyState" class="h-full min-h-[380px] border border-dashed border-slate-700/70 rounded-2xl p-8 flex flex-col items-center justify-center text-center">
+        <div class="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-500 mb-3">
+          <i class="fa-solid fa-chart-pie text-xl"></i>
+        </div>
+        <h3 class="text-sm font-semibold text-slate-300">Awaiting Prediction</h3>
+        <p class="text-xs text-slate-500 max-w-xs mt-1">Submit a headline and optional image on the left to analyze authenticity with dynamic multimodal gating.</p>
+      </div>
+
+      <!-- Result Card -->
+      <div id="resultCard" class="hidden bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 shadow-xl backdrop-blur space-y-5">
+        
+        <!-- Header / Verdict Badge -->
+        <div class="flex items-center justify-between pb-4 border-b border-slate-700/60">
+          <div>
+            <span class="text-xs font-medium text-slate-400">Model Verdict</span>
+            <div id="verdictBadge" class="text-2xl font-black tracking-tight mt-0.5">REAL</div>
+          </div>
+          <div class="text-right">
+            <span class="text-xs font-medium text-slate-400">Confidence</span>
+            <div id="confidenceVal" class="text-2xl font-black text-indigo-400 mt-0.5">99.3%</div>
+          </div>
+        </div>
+
+        <!-- Abstention Alert (Conditional) -->
+        <div id="abstainedAlert" class="hidden p-3 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-300 text-xs flex items-start space-x-2">
+          <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+          <span><strong>Abstention Active:</strong> Model confidence is borderline (&plusmn;5% from threshold). Review recommended.</span>
+        </div>
+
+        <!-- Multimodal Gate Attention (Contribution C2) -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-semibold text-slate-300 flex items-center">
+              <i class="fa-solid fa-sliders text-indigo-400 mr-1.5"></i> Dynamic Modality Attention (Gate)
+            </span>
+            <span id="gateLabel" class="text-slate-400">Text: 57% | Image: 43%</span>
+          </div>
+          <div class="w-full bg-slate-900 rounded-full h-3.5 p-0.5 border border-slate-700 overflow-hidden flex">
+            <div id="textGateBar" class="bg-indigo-500 h-full rounded-l-full transition-all duration-500" style="width: 57%;"></div>
+            <div id="imageGateBar" class="bg-emerald-500 h-full rounded-r-full transition-all duration-500" style="width: 43%;"></div>
+          </div>
+          <div class="flex justify-between text-[11px] text-slate-500">
+            <span><i class="fa-solid fa-font text-indigo-400 mr-1"></i> Headline Reliance</span>
+            <span>Image Reliance <i class="fa-regular fa-image text-emerald-400 ml-1"></i></span>
+          </div>
+        </div>
+
+        <!-- Cross-Modal Cosine Alignment -->
+        <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-700/60 flex items-center justify-between text-xs">
+          <div>
+            <div class="font-medium text-slate-300">Cross-Modal Cosine Alignment</div>
+            <div class="text-[11px] text-slate-500">CLIP similarity between text and image embeddings</div>
+          </div>
+          <span id="similarityVal" class="font-mono font-bold text-sm text-slate-200">-0.0186</span>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Script -->
+  <script>
+    const API_BASE = "http://localhost:8000";
+    const predictForm = document.getElementById("predictForm");
+    const textInput = document.getElementById("textInput");
+    const imageUrlInput = document.getElementById("imageUrlInput");
+    const imagePreviewContainer = document.getElementById("imagePreviewContainer");
+    const imagePreview = document.getElementById("imagePreview");
+    const submitBtn = document.getElementById("submitBtn");
+    const emptyState = document.getElementById("emptyState");
+    const resultCard = document.getElementById("resultCard");
+    const verdictBadge = document.getElementById("verdictBadge");
+    const confidenceVal = document.getElementById("confidenceVal");
+    const abstainedAlert = document.getElementById("abstainedAlert");
+    const gateLabel = document.getElementById("gateLabel");
+    const textGateBar = document.getElementById("textGateBar");
+    const imageGateBar = document.getElementById("imageGateBar");
+    const similarityVal = document.getElementById("similarityVal");
+
+    // Preview image on input
+    imageUrlInput.addEventListener("input", () => {
+      const url = imageUrlInput.value.trim();
+      if (url) {
+        imagePreview.src = url;
+        imagePreviewContainer.classList.remove("hidden");
+      } else {
+        imagePreviewContainer.classList.add("hidden");
+      }
+    });
+
+    // Form submit
+    predictForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = textInput.value.trim();
+      const image_url = imageUrlInput.value.trim() || null;
+
+      if (!text) return;
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Analyzing...</span>`;
+
+      try {
+        const response = await fetch(`${API_BASE}/predict`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, image_url }),
+        });
+
+        if (!response.ok) throw new Error("API request failed");
+
+        const data = await response.json();
+
+        // Render Verdict
+        const isFake = data.prediction === "FAKE";
+        verdictBadge.textContent = data.prediction;
+        verdictBadge.className = `text-2xl font-black tracking-tight mt-0.5 ${isFake ? 'text-rose-500' : 'text-emerald-400'}`;
+
+        // Render Confidence
+        confidenceVal.textContent = `${(data.confidence * 100).toFixed(1)}%`;
+
+        // Render Abstention
+        if (data.abstained) {
+          abstainedAlert.classList.remove("hidden");
+        } else {
+          abstainedAlert.classList.add("hidden");
+        }
+
+        // Render Gating Attention
+        const textWeightPct = Math.round(data.gate_weight * 100);
+        const imageWeightPct = 100 - textWeightPct;
+        textGateBar.style.width = `${textWeightPct}%`;
+        imageGateBar.style.width = `${imageWeightPct}%`;
+        gateLabel.textContent = `Text: ${textWeightPct}% | Image: ${imageWeightPct}%`;
+
+        // Render Similarity
+        similarityVal.textContent = Number(data.cross_modal_similarity).toFixed(4);
+
+        // Toggle cards
+        emptyState.classList.add("hidden");
+        resultCard.classList.remove("hidden");
+      } catch (err) {
+        alert("Failed to connect to FastAPI backend at " + API_BASE + ". Make sure 'uvicorn api.main:app --port 8000' is running!");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i><span>Analyze Post with Multimodal Model</span>`;
+      }
+    });
+  </script>
+</body>
+</html>
