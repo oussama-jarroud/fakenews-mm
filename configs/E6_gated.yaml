@@ -1,0 +1,13 @@
+# E6: Consistency-Aware Gated Multimodal Fusion (Contribution C2)
+exp_id: "E6_gated_consistency_fusion"
+model_type: "gated_fusion"
+text_dim: 512
+image_dim: 512
+hidden_dim: 256
+num_classes: 2
+dropout: 0.3
+lr: 0.001
+weight_decay: 0.01
+epochs: 10
+batch_size: 512
+seeds: [42, 123, 999]
