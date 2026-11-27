@@ -478,8 +478,8 @@ def run_full_pipeline():
         val_m = evaluate_model(m, val_loader, device, "multimodal")
         test_m = evaluate_model(m, test_loader, device, "multimodal")
         record("E6_gated_consistency_fusion", s, val_m, test_m)
-        if test_m["macro_f1"] > best_e6_f1:
-            best_e6_f1 = test_m["macro_f1"]
+        if val_m["macro_f1"] > best_e6_f1:
+            best_e6_f1 = val_m["macro_f1"]
             best_e6_model = m
     print("E6 Gated Consistency Fusion completed across 3 seeds.")
 
@@ -511,8 +511,8 @@ def run_full_pipeline():
         val_m = evaluate_model(m_e7, val_loader, device, "multimodal")
         test_m = evaluate_model(m_e7, test_loader, device, "multimodal")
         record("E7_hard_mismatch_fusion", s, val_m, test_m)
-        if test_m["macro_f1"] > best_e7_f1:
-            best_e7_f1 = test_m["macro_f1"]
+        if val_m["macro_f1"] > best_e7_f1:
+            best_e7_f1 = val_m["macro_f1"]
             best_e7_model = m_e7
     print("E7 Hard Mismatch Gated Fusion completed across 3 seeds.")
 

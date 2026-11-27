@@ -2,13 +2,15 @@
 
 Consistency-Aware Multimodal Fake News Detection using CLIP representations, group-aware zero-leakage deduplication, dynamic gating fusion, and post-hoc calibration on the Fakeddit benchmark.
 
+The [Member A handoff](docs/MEMBER_A_GUIDE.md) lists the two required archives, their extraction paths, the corrected benchmark, and remaining evaluation work.
+
 ---
 
 ## 👥 Team Work Allocation
 
 | Component | Member A (Data, Models & API) | Member B (Evaluation, Calibration & UI) |
 | :--- | :--- | :--- |
-| **Data Ingestion & Splits** | **Phase A1:** 84k sample cleaning, dHash deduplication & group split (`N1`) | **Task B1:** Group-aware split unit tests (`test_splits.py`) |
+| **Data Ingestion & Splits** | **Phase A1:** 94,719-post cleaning, dHash deduplication & group split (`N1`) | **Task B1:** Group-aware split unit tests (`test_splits.py`) |
 | **Embeddings Extraction** | **Phase A2:** Frozen CLIP ViT-B/32 GPU pooled embeddings (`N2`) | - |
 | **Baselines & Fusion** | **Phase A3–A4:** E-1 to E6 training across 3 seeds (`N3`) | - |
 | **Hard-Mismatch Miner** | **Phase A5:** In-batch cosine mining & E7 training (`N3`) | **Task B2:** Swap-the-Image test & modality dropout (`eval/diagnostics.py`) |

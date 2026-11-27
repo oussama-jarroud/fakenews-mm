@@ -1,17 +1,16 @@
 """FastAPI Application for Multimodal Fake News Detection Service.
 
-Provides real-time inference endpoints conforming to Section 14 & Appendix A7
-of the Course Guide.
+Provides real-time inference endpoints conforming to Data Contract #4.
 """
 
 from contextlib import asynccontextmanager
 import logging
-from typing import Dict, List
+from typing import Dict
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.schemas import DemoExample, PredictionRequest, PredictionResponse
+from api.schemas import PredictionRequest, PredictionResponse
 from serve.detector import FakeNewsDetector
 
 logger = logging.getLogger("fnd.api")
@@ -43,7 +42,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Enable CORS for React UI integration (Contract #4 / Section 14)
+# Enable CORS for React UI integration (Contract #4)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -62,7 +61,6 @@ async def root():
         "endpoints": {
             "health": "/health",
             "predict": "/predict",
-            "examples": "/examples",
             "docs": "/docs",
         },
     }
@@ -86,46 +84,15 @@ async def health_check():
     }
 
 
-@app.get("/examples", response_model=List[DemoExample], tags=["Demo"])
-async def get_curated_examples():
-    """Returns 3 curated demo cases guaranteeing a working demo offline (Page 13)."""
-    return [
-        DemoExample(
-            id="case_1_real",
-            title="Consistent Genuine News",
-            text="NASA James Webb Space Telescope reveals deepest infrared image of the early universe.",
-            image_url="https://images.nasa.gov/details-PIA25325.html",
-            expected_verdict="consistent",
-            description="High semantic alignment between headline claim and astronomy imagery.",
-        ),
-        DemoExample(
-            id="case_2_mismatch",
-            title="Out-of-Context Cheapfake",
-            text="Breaking: Catastrophic earthquake levels downtown buildings in capital city today.",
-            image_url="https://images.unsplash.com/photo-1546527868-ccb7ee7dfa6a",
-            expected_verdict="misleading",
-            description="Unrelated photograph paired with sensational claim; cross-modal similarity collapses.",
-        ),
-        DemoExample(
-            id="case_3_uncertain",
-            title="Ambiguous / Borderline Claim",
-            text="Reports suggest unusual atmospheric phenomenon observed near coastal region.",
-            image_url=None,
-            expected_verdict="uncertain",
-            description="Vague textual description without accompanying visual evidence triggers abstention.",
-        ),
-    ]
-
-
 @app.post("/predict", response_model=PredictionResponse, tags=["Inference"])
 async def predict(request: PredictionRequest):
-    """Predict whether a multimodal news post is consistent (REAL) or misleading (FAKE).
+    """Predict whether a multimodal news post is REAL or FAKE.
 
     Calculates:
-      - verdict: 'misleading' | 'consistent' | 'uncertain' (abstention)
-      - p_fake: calibrated probability of falsehood
-      - consistency: CLIP cosine similarity
-      - modality_weights: dynamic attention allocation (text vs. image)
+      - Calibrated classification confidence
+      - Dynamic gate weight (modality reliance: text vs. image)
+      - Cross-modal cosine similarity score
+      - Abstention flag for ambiguous predictions
     """
     global detector
     if detector is None:

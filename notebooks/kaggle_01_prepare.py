@@ -36,8 +36,8 @@ INPUT_TSV_PATH: str = "/kaggle/input/datasets/jarroud/fake-news/multimodal_train
 OUTPUT_DIR: str = "/kaggle/working/images_v1"
 OUTPUT_PARQUET_PATH: str = "/kaggle/working/table.parquet"
 
-# 90,000 raw samples -> yields ~85,000 clean images (matches course specification: ~80k)
-SAMPLE_SIZE: Optional[int] = 90000
+# Candidate count used in the corrected Kaggle run.
+SAMPLE_SIZE: Optional[int] = 100000
 
 TIMEOUT_SECONDS: int = 8
 NUM_WORKERS: int = 32
@@ -355,7 +355,8 @@ def format_contract(df: pd.DataFrame) -> pd.DataFrame:
     df_filtered["id"] = df_filtered["id"].astype("string")
     df_filtered["text"] = df_filtered["text"].astype("string")
     df_filtered["image_path"] = df_filtered["image_path"].astype("string")
-    df_filtered["label2"] = df_filtered["label2"].astype(np.int8)
+    df_filtered["label2"] = 1 - df_filtered["label2"].astype(np.int8)
+    assert df_filtered["label2"].eq(df_filtered["label6"].astype(np.int8).ne(0)).all()
     df_filtered["label6"] = df_filtered["label6"].astype(np.int8)
     df_filtered["subreddit"] = df_filtered["subreddit"].astype("category")
     df_filtered["group_id"] = df_filtered["group_id"].astype(np.int32)
